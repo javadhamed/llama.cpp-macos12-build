@@ -28,8 +28,6 @@ jobs:
 
       - name: Configure CMake (static OpenBLAS, target macOS 12)
         working-directory: llama.cpp
-        env:
-          OpenBLAS_ROOT: /usr/local/opt/openblas
         run: |
           cmake -B build \
             -DGGML_BLAS=ON \
@@ -88,9 +86,12 @@ jobs:
           path: llama.cpp
 
       - name: Install OpenBLAS
+        run: brew install openblas
+
+      - name: Find OpenBLAS path
+        id: openblas
         run: |
-          brew install openblas
-          echo "OpenBLAS_PREFIX=$(brew --prefix openblas)" >> $GITHUB_ENV
+          echo "prefix=$(brew --prefix openblas)" >> $GITHUB_OUTPUT
 
       - name: Configure CMake (static OpenBLAS, target macOS 12)
         working-directory: llama.cpp
@@ -98,7 +99,7 @@ jobs:
           cmake -B build \
             -DGGML_BLAS=ON \
             -DGGML_BLAS_VENDOR=OpenBLAS \
-            -DOpenBLAS_ROOT=$OpenBLAS_PREFIX \
+            -DOpenBLAS_ROOT=${{ steps.openblas.outputs.prefix }} \
             -DGGML_METAL=ON \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
